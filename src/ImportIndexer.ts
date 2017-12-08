@@ -120,6 +120,11 @@ export class ImportIndexer {
         vscode.workspace
             .findFiles(toGlob(this.filesToScan), toGlob(['**/node_modules/**'].concat(this.filesToExclude)), 99999)
             .then((files) => this.processWorkspaceFiles(files, showNotifications, false));
+
+        // scan @angular
+        vscode.workspace
+            .findFiles(toGlob(['node_modules/@angular/**/*.ts']), toGlob([]), 99999)
+            .then((files) => this.processWorkspaceFiles(files, showNotifications, false));
     }
 
     private fileDeleted(file: vscode.Uri): void {
@@ -134,7 +139,7 @@ export class ImportIndexer {
     private processWorkspaceFiles(files: vscode.Uri[], showNotifications: boolean, deleteByFile: boolean): void {
         files = files.filter((f) => {
             return f.fsPath.indexOf('typings') === -1 &&
-                f.fsPath.indexOf('node_modules') === -1 &&
+                // f.fsPath.indexOf('node_modules') === -1 &&
                 f.fsPath.indexOf('jspm_packages') === -1;
         });
 
@@ -195,14 +200,24 @@ export class ImportIndexer {
             }
         }
 
-        var typesRegEx = /(export\s+?(default\s+?)?(?:((?:(?:abstract\s+)?class)|(?:type)|(?:interface)|(?:function(?:\s*\*)?)|(?:let)|(?:var)|(?:const)|(?:enum))\s+)?)([a-zA-z]\w*)/g;
+        // custom resolve
+        if (path.indexOf('node_modules') !== -1) {
+            module = path.replace(/.+node_modules\//, '');
+
+            // if it's @angular also remove any src/** if present
+            if (module.indexOf('@angular') === 0) {
+                module = module.replace(/\/src\/.+$/, '');
+            }
+        }
+
+        var typesRegEx = /(export\s+?(default|declare\s+?)?(?:((?:(?:abstract\s+)?class)|(?:type)|(?:interface)|(?:function(?:\s*\*)?)|(?:let)|(?:var)|(?:const)|(?:enum))\s+)?)([a-zA-z]\w*)/g;
         var typeMatches: string[];
         while ((typeMatches = typesRegEx.exec(data))) {
-            let isDefault: string = typeMatches[2];
+            let isDefault: boolean = typeMatches[2] === 'default';
             let symbolType: string = typeMatches[3];
             let symbolName: string = typeMatches[4];
 
-            this.index.addSymbol(symbolName, module, path, symbolType, !!isDefault, undefined);
+            this.index.addSymbol(symbolName, module, path, symbolType, isDefault, undefined);
         }
 
         var importRegEx = /\bimport\s+(?:({?)\s*(.+?)\s*}?\s+from\s+)?[\'"]([^"\']+)["\']/g;
