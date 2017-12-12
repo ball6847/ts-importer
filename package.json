@@ -56,7 +56,11 @@
 			"properties": {
 				"tsimporter.filesToScan": {
 					"type": "array",
-					"default": ["**/*.ts","**/*.tsx","**/*.vue"],
+					"default": [
+						"**/*.ts",
+						"**/*.tsx",
+						"**/*.vue"
+					],
 					"description": "Glob for files to watch and scan, e.g ./src/** ./src/app/**/*.ts. Defaults to [**/*.ts,**/*.tsx]"
 				},
 				"tsimporter.filesToExclude": {
@@ -114,8 +118,6 @@
 					"default": false,
 					"description": "When true shorter relative imports will be be prefered instead of absolute imports"
 				}
-
-				
 			}
 		}
 	},
@@ -132,7 +134,5 @@
 		"vscode": "^0.11.18",
 		"vsce": "1.14.0"
 	},
-	"dependencies": {
-
-	}
+	"dependencies": {}
 }
